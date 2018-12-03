@@ -1,0 +1,41 @@
+{
+  "conversation_id": {
+    "id": "Ugwv_LIQWsRUPj0GPJR4AaABAagBw7PxBQ"
+  },
+  "sender_id": {
+    "gaia_id": "106493404221491669040",
+    "chat_id": "106493404221491669040"
+  },
+  "timestamp": "1537338822900796",
+  "self_event_state": {
+    "user_id": {
+      "gaia_id": "111422279864910562300",
+      "chat_id": "111422279864910562300"
+    },
+    "notification_level": "RING"
+  },
+  "chat_message": {
+    "message_content": {
+      "segment": [
+        {
+          "type": "TEXT",
+          "text": "好惊悚！！！",
+          "formatting": {
+            "bold": false,
+            "italics": false,
+            "strikethrough": false,
+            "underline": false
+          }
+        }
+      ]
+    }
+  },
+  "event_id": "8WGjYJFME3k8lMyCm_2YnP",
+  "advances_sort_timestamp": true,
+  "event_otr": "ON_THE_RECORD",
+  "delivery_medium": {
+    "medium_type": "BABEL_MEDIUM"
+  },
+  "event_type": "REGULAR_CHAT_MESSAGE",
+  "event_version": "1537338822900796"
+},
