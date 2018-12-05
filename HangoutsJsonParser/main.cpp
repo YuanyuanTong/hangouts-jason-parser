@@ -44,9 +44,9 @@ int main() {
 		long long latest_read_timestamp = atoll(conversation_state["self_read_state"]["latest_read_timestamp"].GetString());
 		const char * inviter_id = conversation_state["inviter_id"]["gaia_id"].GetString();
 		long long invite_timestamp = atoll(conversation_state["invite_timestamp"].GetString());
-		
+
 		Conversation  cur_conversation(inviter_id, invite_timestamp, latest_read_timestamp, self_id);
-		
+
 		const Value & participant_data = a[i]["conversation"]["conversation"]["participant_data"];
 		for (Value::ConstValueIterator itr = participant_data.Begin(); itr != participant_data.End(); ++itr) {
 			//assert(itr->GetObject().HasMember("id"));
@@ -63,7 +63,7 @@ int main() {
 				cur_conversation.SelfName(self_name);
 			}
 		}
-		
+
 		// all detailed events (messages) of a conversation
 		const Value & events = a[i]["events"];
 		for (Value::ConstValueIterator itr = events.Begin(); itr != events.End(); ++itr) {
@@ -99,9 +99,9 @@ int main() {
 				// adding participants of the hangout call
 				const Value & hangout_participants = itr->GetObject()["hangout_event"]["participant_id"];
 				for (Value::ConstValueIterator pitr = hangout_participants.Begin(); pitr != hangout_participants.End(); ++pitr) {
-					new_hangout_event->AddParticipant( pitr->GetObject()["gaia_id"].GetString() );
+					new_hangout_event->AddParticipant(pitr->GetObject()["gaia_id"].GetString());
 				}
-				
+
 				new_event.SetHangoutEvent(new_hangout_event);
 			}
 
@@ -116,8 +116,8 @@ int main() {
 
 					for (Value::ConstValueIterator sitr = segments.Begin(); sitr != segments.End(); ++sitr) {
 
-						if ( strcmp( sitr->GetObject()["type"].GetString(), "LINK" ) ) {
-							if ( strcmp( sitr->GetObject()["type"].GetString(), "LINE_BREAK" ) ) {
+						if (strcmp(sitr->GetObject()["type"].GetString(), "LINK")) {
+							if (strcmp(sitr->GetObject()["type"].GetString(), "LINE_BREAK")) {
 								new_event.AddText(sitr->GetObject()["text"].GetString());
 							}
 							else {
@@ -128,7 +128,7 @@ int main() {
 						// texts including urls (seen as attachments)
 						else {
 							new_event.AddText(sitr->GetObject()["text"].GetString());
-							new_event.AddAttachment(sitr->GetObject()["text"].GetString(), Attachment::Type::LINK );
+							new_event.AddAttachment(sitr->GetObject()["text"].GetString(), Attachment::Type::LINK);
 						}
 					}
 				}
@@ -140,7 +140,7 @@ int main() {
 
 					for (Value::ConstValueIterator aitr = attachments.Begin(); aitr != attachments.End(); ++aitr) {
 						// 
-						if (strcmp(aitr->GetObject()["embed_item"]["type"][0].GetString(), "PLUS_PHOTO") ) {
+						if (strcmp(aitr->GetObject()["embed_item"]["type"][0].GetString(), "PLUS_PHOTO")) {
 							// location attachment
 							if (!strcmp(aitr->GetObject()["embed_item"]["type"][0].GetString(), "PLACE_V2")) {
 								const Value & place = aitr->GetObject()["embed_item"]["place_v2"];
@@ -154,11 +154,11 @@ int main() {
 							const char * url = plus_photo["thumbnail"]["url"].GetString();
 							Attachment::Type attachment_type;
 							// photo
-							if ( !strcmp(plus_photo["media_type"].GetString(), "PHOTO") ) {
+							if (!strcmp(plus_photo["media_type"].GetString(), "PHOTO")) {
 								attachment_type = Attachment::Type::PHOTO;
 							}
 
-							if (!strcmp(plus_photo["media_type"].GetString(), "VIDEO") ) {
+							if (!strcmp(plus_photo["media_type"].GetString(), "VIDEO")) {
 								attachment_type = Attachment::Type::VIDEO;
 							}
 							new_event.AddAttachment(url, attachment_type);
@@ -175,6 +175,46 @@ int main() {
 		// adding the current conversation to the conversation list
 		conversation_list.AddConversation(cur_conversation);
 	}
+
+
+	// printing some representative information of the chat history
+
+	// first hangout conversation
+	Conversation first_hangout;
+	cout << "Since you were first in Hangouts on ";
+	conversation_list.GetFirstContact(first_hangout).PrintDate();
+	cout << " to chat with ";
+	first_hangout.PrintParticipants();
+	cout << ", you have made " << conversation_list.GetNumber() << " conversations in Hangouts." << endl;
+
+	// most frequently used conversation
+	Conversation most_visited_con;
+	int visit_times = conversation_list.GetFrequentContact(most_visited_con);
+	cout << "You are most frequently contacted with ";
+	most_visited_con.PrintParticipants();
+	cout << ", sending " << visit_times << " messages to each other in total." << endl;
+
+	// most chatting day
+	Conversation most_chatting_con;
+	Time chatting_time = conversation_list.GetMostChattingDay(most_chatting_con);
+	cout << "You changed " << most_chatting_con.GetEvents(chatting_time).size() << " messages with ";
+	most_chatting_con.PrintParticipants();
+	cout << " on ";
+	chatting_time.PrintDate();
+	cout << ". " << endl;
+	cout << "It must be a *** day..." << endl; // extract meaning from the messages by machine learning???
+
+	// a random prompt about a specific event
+	Conversation location_con;
+	Event location_event;
+	conversation_list.GetType(Event::LOCATION, location_con, location_event);
+	cout << "Do you still remember that on ";
+	ConvertTime(location_event.GetTimestamp()).PrintDate();
+	cout << " you shared a location ";
+	cout << location_event.GetTypeAttachment(Event::LOCATION);
+	cout << " with ";
+	location_con.PrintParticipants();
+	cout << "?" << endl;
 
 	system("pause");
 	return 0;

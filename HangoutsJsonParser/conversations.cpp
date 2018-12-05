@@ -2,13 +2,26 @@
 
 // ************** Time ***********************
 
-// checks if the two times is on the same date
-bool SameDate(const Time &t1, const Time &t2) {
+// prints the date
+void Time::PrintDate() const {
+	cout << month << "/" << day << "/" << year;
+}
+
+// checks if the given timestamp is on the same day with the current Time
+bool Time::SameDate(long long ts) {
+	Time time = ConvertTime(ts);
+	return (day == time.day && month == time.month && year == time.year);
+}
+
+// checks if the two Times is on the same date
+bool SameDate(long long ts1, long long ts2) {
+	Time t1 = ConvertTime(ts1);
+	Time t2 = ConvertTime(ts2);
 	return (t1.day == t2.day && t1.month == t2.month && t1.year == t2.year);
 }
 
 // converts the timestamp to standard time format in local time
-Time CovertTime(long long timestamp) {
+Time ConvertTime(long long timestamp) {
 
 	time_t tick = (time_t)(timestamp / 1000000);
 	struct tm tm;
@@ -93,8 +106,158 @@ void Conversation::SelfName(const char* sn) {
 	strcpy(self_name, sn);
 }
 
+// counts the events in a conversation
+int Conversation::EventCount() const {
+	return events.size();
+}
+
+// prints all the participants
+void Conversation::PrintParticipants() const {
+	cout << "< ";
+	for (vector<Participant>::const_iterator it = participants.begin(); it != participants.end(); ++it) {
+		cout << it->GetName() << " ";
+	}
+	cout << ">";
+}
+
+// checks if the conversation was started by self
+bool Conversation::SelfStarted() const {
+	return strcmp(self_id, inviter_id) == 0;
+}
+
+// gets the invite timestamp of a conversation
+long long Conversation::GetInviteTimestamp() const {
+	return invite_timestamp;
+}
+
+// gets all the events
+vector<Event> Conversation::GetEvents() const {
+	return events;
+}
+
+// gets all the participants
+vector<Participant> Conversation::GetParticipants() const {
+	return participants;
+}
+
+// gets events on the same date with the given Time
+vector<Event> Conversation::GetEvents(Time t) const {
+	vector<Event> time_events;
+	for (vector<Event>::const_iterator it = events.begin(); it != events.end(); ++it) {
+		if (t.SameDate(it->GetTimestamp())) {
+			time_events.push_back(*it);
+		}
+	}
+	return time_events;
+}
+
+// gets a specific type of events
+vector<Event> Conversation::GetEvents(Event::Type t) const {
+	vector<Event> type_events;
+	for (vector<Event>::const_iterator it = events.begin(); it != events.end(); ++it) {
+		if (it->IsEventType(t)) {
+			type_events.push_back(*it);
+		}
+	}
+	return type_events;
+}
+
 
 // **************** ConversationList ********************************
+
+// gets the total number of conversations
+int ConversationList::GetNumber() const {
+	return conversations.size();
+}
+
+// adds a new conversation to the list
 void ConversationList::AddConversation(const Conversation & con) {
 	conversations.push_back(con);
+}
+
+// gets the most frequently contacted person, returns the frequency
+int ConversationList::GetFrequentContact(Conversation &con) const {
+	int max_frequency = 0;
+	int index = 0;
+	int max_index = index;
+	for (vector<Conversation>::const_iterator it = conversations.begin(); it != conversations.end(); ++it) {
+		if (it->EventCount() > max_frequency) {
+			max_frequency = it->EventCount();
+			max_index = index;
+		}
+		++index;
+	}
+
+	con = conversations[max_index];
+	return max_frequency;
+}
+
+// gets the earliest started conversation
+Time ConversationList::GetFirstContact(Conversation &con) const {
+	long long first_timestamp = std::numeric_limits<long long>::max();
+	int index = 0;
+	int first_index = index;
+	for (vector<Conversation>::const_iterator it = conversations.begin(); it != conversations.end(); ++it) {
+		if (it->GetInviteTimestamp() < first_timestamp) {
+			first_timestamp = it->GetInviteTimestamp();
+			first_index = index;
+		}
+		++index;
+	}
+
+	con = conversations[first_index];
+	return ConvertTime(first_timestamp);
+}
+
+// gets the most chatting day (Time) in terms of messages exchanged in a single conversation
+Time ConversationList::GetMostChattingDay(Conversation &con) const {
+	int day_events_cnt = 0;
+	int max_cnt = 0;
+	int index = 0;
+	int max_idx = index;
+	long long tmp_timestamp = 0;
+	long long max_timestamp = tmp_timestamp;
+	for (vector<Conversation>::const_iterator it = conversations.begin(); it != conversations.end(); ++it) {
+		vector<Event> events = it->GetEvents();
+		for (vector<Event>::const_iterator eit = events.begin(); eit != events.end(); ++eit) {
+			if (SameDate(tmp_timestamp, eit->GetTimestamp())) {
+				++day_events_cnt;
+				if (day_events_cnt > max_cnt) {
+					max_cnt = day_events_cnt;
+					max_timestamp = tmp_timestamp;
+					max_idx = index;
+				}
+			}
+			else {
+				tmp_timestamp = eit->GetTimestamp();
+				day_events_cnt = 1;
+			}
+		}
+		++index;
+	}
+
+	con = conversations[max_idx];
+	return ConvertTime(max_timestamp);
+}
+
+// gets a random event of a specific type
+bool ConversationList::GetType(Event::Type t, Conversation &con, Event &ev) const {
+	vector<Conversation> type_conversations;
+	for (vector<Conversation>::const_iterator it = conversations.begin(); it != conversations.end(); ++it) {
+		if (it->GetEvents(t).size()) {
+			type_conversations.push_back(*it);
+		}
+	}
+	if (type_conversations.size()) {
+		srand(time(NULL));
+		int index = rand() % type_conversations.size();
+		con = type_conversations[index];
+		vector<Event> events = con.GetEvents(t);
+		index = rand() % events.size();
+		ev = events[index];
+		return true;
+	}
+	else {
+		return false;
+	}
 }

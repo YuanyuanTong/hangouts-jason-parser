@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string.h>
+#include <stdlib.h>
 #include <time.h>
 #include <vector>
 #include "events.h"
@@ -39,19 +40,28 @@ public:
 		second = tt.second;
 	}
 
-	// check if the two Times is on the same date
-	friend bool SameDate(const Time &t1, const Time &t2);
+	// prints the date
+	void PrintDate() const;
 
-	// convert the timestamp to standard time format in local time
-	friend Time CovertTime(long long timestamp);
+	// checks if the given timestamp is on the same day with the current Time
+	bool SameDate(long long ts);
+
+	// checks if the two Times is on the same date
+	friend bool SameDate(long long ts1, long long ts2);
+
+	// converts the timestamp to standard time format in local time
+	friend Time ConvertTime(long long timestamp);
 
 	// output operator for Time
 	friend std::ostream& operator<<(std::ostream& os, const Time& t);
 
 };
 
-bool SameDate(const Time &t1, const Time &t2);
-Time CovertTime(long long timestamp);
+// checks if the two times is on the same date
+bool SameDate(long long ts1, long long ts2);
+// converts the timestamp to standard time format in local time
+Time ConvertTime(long long timestamp);
+// output operator for Time
 std::ostream& operator<<(std::ostream& os, const Time& t);
 
 
@@ -88,6 +98,25 @@ public:
 	void AddEvent(Event event);
 	// edits the self name
 	void SelfName(const char* sn = "N.A.");
+	// counts the events in a conversation
+	int EventCount() const;
+	
+	// prints all the participants
+	void PrintParticipants() const;
+	// checks if the conversation was started by self
+	bool SelfStarted() const;
+	// gets the invite timestamp
+	long long GetInviteTimestamp() const;
+	// gets all the participants
+	vector<Participant> GetParticipants() const;
+	// gets all the events
+	vector<Event> GetEvents() const;
+	// gets events on the same date with the given Time
+	vector<Event> GetEvents(Time t) const;
+	// gets a specific type of events
+	vector<Event> GetEvents(Event::Type t) const;
+
+
 };
 
 // **************** ConversationList ********************************
@@ -95,7 +124,18 @@ class ConversationList {
 	vector<Conversation> conversations;
 public:
 	ConversationList() {}
+	// gets the total number of conversations
+	int GetNumber() const;
+	// adds a new conversation to the list
 	void AddConversation(const Conversation & con);
+	// gets the most frequently visited conversation
+	int GetFrequentContact(Conversation &con) const;
+	// gets the earliest started conversation
+	Time GetFirstContact(Conversation &con) const;
+	// gets the most chatting day (Time) in terms of messages exchanged in a single conversation
+	Time GetMostChattingDay(Conversation &con) const;
+	// gets a random event of a specific type, return false if there is no
+	bool GetType(Event::Type t, Conversation &con, Event &ev) const;
 };
 
 
