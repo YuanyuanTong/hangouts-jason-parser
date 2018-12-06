@@ -1,4 +1,4 @@
-# hangouts-jason-parser
+# hangouts-json-parser
 This is a C++ parser for Hangouts.json from Google takeout. It is based on RapidJSON parser.
 
 This parser can read a Hangouts.json file and store chat history data into a ConversationList object.
